@@ -1,0 +1,133 @@
+#!/usr/bin/env python3
+
+import RPi.GPIO as GPIO
+from mfrc522 import SimpleMFRC522
+import time
+import json
+
+class RFIDController:
+    def __init__(self):
+        self.reader = SimpleMFRC522()
+        self.registered_tags = self.load_registered_tags()
+        
+    def load_registered_tags(self):
+        """Carrega tags registradas do arquivo JSON"""
+        try:
+            with open('registered_tags.json', 'r') as f:
+                return json.load(f)
+        except FileNotFoundError:
+            return {}
+    
+    def save_registered_tags(self):
+        """Salva tags registradas no arquivo JSON"""
+        with open('registered_tags.json', 'w') as f:
+            json.dump(self.registered_tags, f, indent=4)
+    
+    def register_tag(self, name):
+        """Registra uma nova tag RFID"""
+        print(f"Aproxime a tag RFID para registrar como: {name}")
+        try:
+            id, text = self.reader.read()
+            self.registered_tags[str(id)] = {
+                'name': name,
+                'registered_at': time.strftime('%Y-%m-%d %H:%M:%S')
+            }
+            self.save_registered_tags()
+            print(f"Tag registrada com sucesso! ID: {id}")
+            return True
+        except Exception as e:
+            print(f"Erro ao registrar tag: {e}")
+            return False
+        finally:
+            GPIO.cleanup()
+    
+    def read_tag(self):
+        """Lê uma tag RFID e verifica se está registrada"""
+        try:
+            print("Aguardando tag RFID...")
+            id, text = self.reader.read()
+            
+            if str(id) in self.registered_tags:
+                tag_info = self.registered_tags[str(id)]
+                print(f"✓ Acesso permitido para: {tag_info['name']}")
+                print(f"  ID: {id}")
+                print(f"  Registrado em: {tag_info['registered_at']}")
+                return True, tag_info
+            else:
+                print(f"✗ Tag não registrada - ID: {id}")
+                return False, None
+                
+        except Exception as e:
+            print(f"Erro na leitura: {e}")
+            return False, None
+        finally:
+            GPIO.cleanup()
+    
+    def write_to_tag(self, text):
+        """Escreve dados em uma tag RFID"""
+        print(f"Aproxime a tag RFID para escrever: '{text}'")
+        try:
+            id = self.reader.write(text)
+            print(f"Dados escritos com sucesso na tag ID: {id}")
+            return True
+        except Exception as e:
+            print(f"Erro ao escrever na tag: {e}")
+            return False
+        finally:
+            GPIO.cleanup()
+    
+    def list_registered_tags(self):
+        """Lista todas as tags registradas"""
+        if not self.registered_tags:
+            print("Nenhuma tag registrada.")
+            return
+        
+        print("\n=== TAGS REGISTRADAS ===")
+        for tag_id, info in self.registered_tags.items():
+            print(f"ID: {tag_id}")
+            print(f"  Nome: {info['name']}")
+            print(f"  Registrado em: {info['registered_at']}")
+            print("-" * 30)
+
+def main():
+    rfid = RFIDController()
+    
+    while True:
+        print("\n=== SISTEMA RFID ===")
+        print("1. Ler tag RFID")
+        print("2. Registrar nova tag")
+        print("3. Escrever em tag")
+        print("4. Listar tags registradas")
+        print("5. Sair")
+        
+        choice = input("\nEscolha uma opção: ")
+        
+        if choice == '1':
+            rfid.read_tag()
+            time.sleep(2)
+            
+        elif choice == '2':
+            name = input("Digite o nome para a tag: ")
+            rfid.register_tag(name)
+            
+        elif choice == '3':
+            text = input("Digite o texto para escrever na tag: ")
+            rfid.write_to_tag(text)
+            
+        elif choice == '4':
+            rfid.list_registered_tags()
+            
+        elif choice == '5':
+            print("Saindo...")
+            break
+            
+        else:
+            print("Opção inválida!")
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\nPrograma interrompido pelo usuário")
+    finally:
+        GPIO.cleanup()

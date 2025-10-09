@@ -1,0 +1,36 @@
+#!/usr/bin/env python3
+
+import RPi.GPIO as GPIO
+from mfrc522 import SimpleMFRC522
+import time
+
+# Inicializa o leitor RFID
+reader = SimpleMFRC522()
+
+print("Sistema RFID - Leitura Contínua")
+print("Pressione Ctrl+C para sair")
+
+try:
+    while True:
+        print("\nAproxime uma tag RFID...")
+        
+        try:
+            # Lê a tag RFID
+            id, text = reader.read()
+            
+            print(f"Tag detectada!")
+            print(f"ID: {id}")
+            print(f"Texto: {text}")
+            
+            # Aguarda 2 segundos antes da próxima leitura
+            time.sleep(2)
+            
+        except Exception as e:
+            print(f"Erro na leitura: {e}")
+            time.sleep(1)
+            
+except KeyboardInterrupt:
+    print("\nPrograma finalizado")
+    
+finally:
+    GPIO.cleanup()
