@@ -9,8 +9,6 @@ LED_VERDE = 17
 LED_VERMELHO = 27
 
 GPIO.setmode(GPIO.BCM)
-GPIO.setup(LED_VERDE, GPIO.OUT)
-GPIO.setup(LED_VERMELHO, GPIO.OUT)
 
 # Tags autorizadas (substitua pelos IDs das suas tags)
 TAGS_AUTORIZADAS = {
