@@ -1,68 +1,95 @@
 import kivy
 from kivy.app import App
-from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.core.window import Window
+import subprocess
+import shlex
+import os
 
 # Define uma cor de fundo (opcional)
 Window.clearcolor = (0.15, 0.15, 0.15, 1)
 
-class LoginScreen(BoxLayout):
-    """
-    Widget raiz da tela. A interface (layout) é definida em 'painel.kv'.
-    A lógica (funções/métodos) é definida aqui.
+class LoginScreen(Screen):
+    """Screen que contém o formulário de login. A estrutura visual
+    é definida em 'painel.kv'.
     """
 
-    # --- A FUNÇÃO DE LÓGICA ---
     def verificar_login(self):
-        """
-        Esta função é chamada pelo arquivo .kv quando o botão é pressionado.
-        """
-        
-        # 1. Pegar os valores dos inputs.
-        # Usamos 'self.ids' para acessar os widgets definidos com 'id' no .kv
+        """Chamado pelo botão 'Entrar' no arquivo .kv. Se o login for
+        bem-sucedido troca para a tela 'main'."""
+
         usuario_digitado = self.ids.user_input.text
         senha_digitada = self.ids.pass_input.text
 
-        # 2. "Banco de dados" simulado
         usuarios_cadastrados = {
             "admin": "senha123",
             "usuario": "abc",
-            "kivy_dev": "python"
+            "kivy_dev": "python",
         }
 
-        # 3. Lógica de verificação e feedback
-        
-        # Pega o widget do label de feedback pelo seu id
-        feedback_label = self.ids.feedback 
+        feedback_label = self.ids.feedback
 
         if usuario_digitado in usuarios_cadastrados:
             if usuarios_cadastrados[usuario_digitado] == senha_digitada:
-                # SUCESSO
                 feedback_label.text = f'Login bem-sucedido! Bem-vindo(a), {usuario_digitado}.'
-                feedback_label.color = (0, 1, 0, 1) # Verde
+                feedback_label.color = (0, 1, 0, 1)
+                # Troca para a tela principal
+                if self.manager:
+                    self.manager.current = 'main'
             else:
-                # FALHA (Senha errada)
                 feedback_label.text = 'Senha incorreta.'
-                feedback_label.color = (1, 0, 0, 1) # Vermelho
+                feedback_label.color = (1, 0, 0, 1)
         else:
-            # FALHA (Usuário não existe)
             feedback_label.text = 'Usuário não encontrado.'
-            feedback_label.color = (1, 0, 0, 1) # Vermelho
-        
+            feedback_label.color = (1, 0, 0, 1)
+
         # Limpa o campo de senha após a tentativa
         self.ids.pass_input.text = ""
 
 
+DEFAULT_COMMAND = os.path.join(os.path.dirname(__file__), 'codigoParaInicar.py')
+
+
+class MainScreen(Screen):
+    """Tela principal que aparece após login bem-sucedido."""
+
+    def run_command(self):
+        """Inicia o comando especificado no campo de texto em background.
+
+        Se o campo estiver vazio executa `codigoParaInicar.py` por padrão.
+        Usa shell=True para permitir comandos compostos (pipes/redirecionamentos).
+        """
+        # obtém o comando do campo de texto (se presente)
+        cmd_text = ''
+        try:
+            if 'command_input' in self.ids:
+                cmd_text = self.ids.command_input.text.strip()
+        except Exception:
+            cmd_text = ''
+
+        if not cmd_text:
+            cmd_text = f'python "{DEFAULT_COMMAND}"'
+
+        try:
+            subprocess.Popen(cmd_text, shell=True)
+            if 'main_feedback' in self.ids:
+                self.ids.main_feedback.text = f'Comando iniciado.'
+        except Exception as e:
+            if 'main_feedback' in self.ids:
+                self.ids.main_feedback.text = f'Erro ao iniciar: {e}'
+            else:
+                print(f'Erro ao iniciar comando: {e}')
+
+
 class PainelApp(App):
-    """
-    Classe principal da Aplicação.
-    Por convenção do Kivy, se a classe se chama 'PainelApp',
-    ela irá carregar automaticamente o arquivo 'painel.kv'.
-    """
+    """App principal. Cria um ScreenManager com as telas de login e
+    tela principal."""
+
     def build(self):
-        # O método build retorna a instância da classe que o
-        # arquivo 'painel.kv' irá estilizar.
-        return LoginScreen()
+        sm = ScreenManager()
+        sm.add_widget(LoginScreen(name='login'))
+        sm.add_widget(MainScreen(name='main'))
+        return sm
 
 # --- Ponto de entrada do script ---
 if __name__ == '__main__':

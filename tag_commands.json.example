@@ -1,0 +1,7 @@
+{
+  "123456789": "echo 'Tag 123456789 detectada'",
+  "987654321": {
+    "command": "python codigoParaInicar.py",
+    "shell": false
+  }
+}

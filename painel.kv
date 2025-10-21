@@ -1,9 +1,13 @@
-# Este arquivo define as regras de layout para a classe LoginScreen
-# que foi definida no arquivo painel.py
+#:kivy 2.0.0
+
+ScreenManager:
+    LoginScreen:
+        name: 'login'
+    MainScreen:
+        name: 'main'
+
 
 <LoginScreen>:
-    # 'self' no .py é 'root' no .kv (quando dentro da regra)
-    
     orientation: 'vertical'
     padding: [50, 20]
     spacing: 20
@@ -12,7 +16,7 @@
         text: 'Plataforma de Login (com .kv)'
         font_size: '24sp'
         bold: True
-        size_hint_y: None # Desativa o redimensionamento vertical
+        size_hint_y: None
         height: 50
 
     GridLayout:
@@ -24,9 +28,9 @@
         Label:
             text: 'Usuário:'
             font_size: '18sp'
-        
+
         TextInput:
-            id: user_input # Damos um ID para acessar no Python (via self.ids)
+            id: user_input
             multiline: False
             font_size: '18sp'
             hint_text: 'Digite seu usuário'
@@ -34,11 +38,11 @@
         Label:
             text: 'Senha:'
             font_size: '18sp'
-        
+
         TextInput:
-            id: pass_input # Damos um ID para acessar no Python (via self.ids)
+            id: pass_input
             multiline: False
-            password: True # Mascara a senha (***)
+            password: True
             font_size: '18sp'
             hint_text: 'Digite sua senha'
 
@@ -47,12 +51,64 @@
         font_size: '20sp'
         size_hint_y: None
         height: 50
-        # AQUI ESTÁ A MÁGICA:
-        # 'on_press' chama o método 'verificar_login' da classe LoginScreen
-        on_press: root.verificar_login() 
+        on_press: root.verificar_login()
 
     Label:
-        id: feedback # Damos um ID para o label de feedback
-        text: '' # Texto inicial
+        id: feedback
+        text: ''
         font_size: '16sp'
-        color: (1, 0, 0, 1) # Cor inicial (vermelho para erros)
+        color: (1, 0, 0, 1)
+
+
+<MainScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        padding: [20]
+        spacing: 10
+
+        Label:
+            text: 'Tela Principal'
+            font_size: '24sp'
+            size_hint_y: None
+            height: 50
+
+        Label:
+            text: 'Você está logado.'
+            font_size: '18sp'
+
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint_y: None
+            height: 120
+            spacing: 8
+
+            Label:
+                text: 'Comando a executar (se vazio executa codigoParaInicar.py)'
+                size_hint_y: None
+                height: 24
+
+            TextInput:
+                id: command_input
+                multiline: False
+                hint_text: 'Ex: python meu_script.py --arg valor'
+
+            BoxLayout:
+                size_hint_y: None
+                height: 40
+                spacing: 10
+
+                Button:
+                    text: 'Executar Comando'
+                    on_press: root.run_command()
+
+                Button:
+                    text: 'Logout'
+                    size_hint_x: None
+                    width: 120
+                    on_press: app.root.current = 'login'
+
+        Label:
+            id: main_feedback
+            text: ''
+            size_hint_y: None
+            height: 30
