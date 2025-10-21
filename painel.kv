@@ -1,24 +1,58 @@
-<Painel>:
-    orientation: "vertical"
-    padding: 40
-    spacing: 40
+# Este arquivo define as regras de layout para a classe LoginScreen
+# que foi definida no arquivo painel.py
+
+<LoginScreen>:
+    # 'self' no .py é 'root' no .kv (quando dentro da regra)
+    
+    orientation: 'vertical'
+    padding: [50, 20]
+    spacing: 20
 
     Label:
-        id: estado
-        text: "LED Desligado"
-        font_size: 48
-        color: 1, 0, 0, 1
+        text: 'Plataforma de Login (com .kv)'
+        font_size: '24sp'
+        bold: True
+        size_hint_y: None # Desativa o redimensionamento vertical
+        height: 50
+
+    GridLayout:
+        cols: 2
+        spacing: 10
+        size_hint_y: None
+        height: 80
+
+        Label:
+            text: 'Usuário:'
+            font_size: '18sp'
+        
+        TextInput:
+            id: user_input # Damos um ID para acessar no Python (via self.ids)
+            multiline: False
+            font_size: '18sp'
+            hint_text: 'Digite seu usuário'
+
+        Label:
+            text: 'Senha:'
+            font_size: '18sp'
+        
+        TextInput:
+            id: pass_input # Damos um ID para acessar no Python (via self.ids)
+            multiline: False
+            password: True # Mascara a senha (***)
+            font_size: '18sp'
+            hint_text: 'Digite sua senha'
 
     Button:
-        text: "Alternar LED"
-        font_size: 42
-        size_hint: (1, 0.3)
-        background_color: 0, 0.6, 0, 1
-        on_press: root.alternar_led()
+        text: 'Entrar'
+        font_size: '20sp'
+        size_hint_y: None
+        height: 50
+        # AQUI ESTÁ A MÁGICA:
+        # 'on_press' chama o método 'verificar_login' da classe LoginScreen
+        on_press: root.verificar_login() 
 
-    Button:
-        text: "Sair"
-        font_size: 32
-        size_hint: (1, 0.2)
-        background_color: 0.8, 0, 0, 1
-        on_press: app.stop()
+    Label:
+        id: feedback # Damos um ID para o label de feedback
+        text: '' # Texto inicial
+        font_size: '16sp'
+        color: (1, 0, 0, 1) # Cor inicial (vermelho para erros)

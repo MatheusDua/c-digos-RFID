@@ -1,34 +1,69 @@
+import kivy
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.core.window import Window
-import RPi.GPIO as GPIO
 
-# Configurações da janela
-Window.size = (800, 480)  # Tamanho da tela de 7"
-Window.clearcolor = (0.1, 0.1, 0.1, 1)  # Cor de fundo
+# Define uma cor de fundo (opcional)
+Window.clearcolor = (0.15, 0.15, 0.15, 1)
 
-# Configuração do GPIO
-GPIO.setmode(GPIO.BCM)
-LED_PIN = 17
-GPIO.setup(LED_PIN, GPIO.OUT)
+class LoginScreen(BoxLayout):
+    """
+    Widget raiz da tela. A interface (layout) é definida em 'painel.kv'.
+    A lógica (funções/métodos) é definida aqui.
+    """
 
-class Painel(BoxLayout):
-    led_ligado = False
+    # --- A FUNÇÃO DE LÓGICA ---
+    def verificar_login(self):
+        """
+        Esta função é chamada pelo arquivo .kv quando o botão é pressionado.
+        """
+        
+        # 1. Pegar os valores dos inputs.
+        # Usamos 'self.ids' para acessar os widgets definidos com 'id' no .kv
+        usuario_digitado = self.ids.user_input.text
+        senha_digitada = self.ids.pass_input.text
 
-    def alternar_led(self):
-        """Alterna o estado do LED"""
-        self.led_ligado = not self.led_ligado
-        GPIO.output(LED_PIN, self.led_ligado)
-        self.ids.estado.text = "LED Ligado" if self.led_ligado else "LED Desligado"
-        self.ids.estado.color = (0, 1, 0, 1) if self.led_ligado else (1, 0, 0, 1)
+        # 2. "Banco de dados" simulado
+        usuarios_cadastrados = {
+            "admin": "senha123",
+            "usuario": "abc",
+            "kivy_dev": "python"
+        }
+
+        # 3. Lógica de verificação e feedback
+        
+        # Pega o widget do label de feedback pelo seu id
+        feedback_label = self.ids.feedback 
+
+        if usuario_digitado in usuarios_cadastrados:
+            if usuarios_cadastrados[usuario_digitado] == senha_digitada:
+                # SUCESSO
+                feedback_label.text = f'Login bem-sucedido! Bem-vindo(a), {usuario_digitado}.'
+                feedback_label.color = (0, 1, 0, 1) # Verde
+            else:
+                # FALHA (Senha errada)
+                feedback_label.text = 'Senha incorreta.'
+                feedback_label.color = (1, 0, 0, 1) # Vermelho
+        else:
+            # FALHA (Usuário não existe)
+            feedback_label.text = 'Usuário não encontrado.'
+            feedback_label.color = (1, 0, 0, 1) # Vermelho
+        
+        # Limpa o campo de senha após a tentativa
+        self.ids.pass_input.text = ""
+
 
 class PainelApp(App):
+    """
+    Classe principal da Aplicação.
+    Por convenção do Kivy, se a classe se chama 'PainelApp',
+    ela irá carregar automaticamente o arquivo 'painel.kv'.
+    """
     def build(self):
-        return Painel()
+        # O método build retorna a instância da classe que o
+        # arquivo 'painel.kv' irá estilizar.
+        return LoginScreen()
 
-    def on_stop(self):
-        """Limpa GPIO ao fechar o app"""
-        GPIO.cleanup()
-
-if __name__ == "__main__":
+# --- Ponto de entrada do script ---
+if __name__ == '__main__':
     PainelApp().run()
