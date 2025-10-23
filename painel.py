@@ -5,9 +5,11 @@ from kivy.core.window import Window
 import subprocess
 import shlex
 import os
+import sys
 
 # Define uma cor de fundo (opcional)
 Window.clearcolor = (0.15, 0.15, 0.15, 1)
+
 
 class LoginScreen(Screen):
     """Screen que contém o formulário de login. A estrutura visual
@@ -17,7 +19,6 @@ class LoginScreen(Screen):
     def verificar_login(self):
         """Chamado pelo botão 'Entrar' no arquivo .kv. Se o login for
         bem-sucedido troca para a tela 'main'."""
-
         usuario_digitado = self.ids.user_input.text
         senha_digitada = self.ids.pass_input.text
 
@@ -57,9 +58,9 @@ class MainScreen(Screen):
         """Inicia o comando especificado no campo de texto em background.
 
         Se o campo estiver vazio executa `codigoParaInicar.py` por padrão.
-        Usa shell=True para permitir comandos compostos (pipes/redirecionamentos).
+        Usa shell=True para permitir comandos compostos (pipes/redirecionamentos)
+        quando o usuário digitar algo.
         """
-        # obtém o comando do campo de texto (se presente)
         cmd_text = ''
         try:
             if 'command_input' in self.ids:
@@ -68,29 +69,14 @@ class MainScreen(Screen):
             cmd_text = ''
 
         if not cmd_text:
-            cmd_text = f'python "{DEFAULT_COMMAND}"'
+            # usa o python do ambiente atual para executar o script padrão
+            cmd = [sys.executable, DEFAULT_COMMAND]
+        else:
+            # se o usuário digitou algo, permite comandos compostos via shell
+            cmd = cmd_text
 
         try:
-            subprocess.Popen(cmd_text, shell=True)
-            if 'main_feedback' in self.ids:
-                self.ids.main_feedback.text = f'Comando iniciado.'
-        except Exception as e:
-            if 'main_feedback' in self.ids:
-                self.ids.main_feedback.text = f'Erro ao iniciar: {e}'
+            if isinstance(cmd, (list, tuple)):
+                subprocess.Popen(cmd)
             else:
-                print(f'Erro ao iniciar comando: {e}')
-
-
-class PainelApp(App):
-    """App principal. Cria um ScreenManager com as telas de login e
-    tela principal."""
-
-    def build(self):
-        sm = ScreenManager()
-        sm.add_widget(LoginScreen(name='login'))
-        sm.add_widget(MainScreen(name='main'))
-        return sm
-
-# --- Ponto de entrada do script ---
-if __name__ == '__main__':
-    PainelApp().run()
+                subprocess.Popen(cmd, shell=
